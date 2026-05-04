@@ -1,93 +1,131 @@
 // State Management
-let recordCount = 0;
+let records = [];
+let currentUser = "admin@mediguard.com";
 
-// UI Elements
-const authContainer = document.getElementById('auth-container');
-const dashboardContainer = document.getElementById('dashboard-container');
+// DOM Elements
 const authForm = document.getElementById('auth-form');
 const clientForm = document.getElementById('client-form');
+const searchBar = document.getElementById('search-bar');
 const clientList = document.getElementById('client-list');
 const logList = document.getElementById('log-list');
 
-// 1. Auth Logic
-function toggleAuthMode() {
-    const title = document.getElementById('auth-title');
-    const btn = document.getElementById('auth-btn');
-    const toggleText = document.getElementById('toggle-auth');
-    
-    if (btn.innerText === "Sign In") {
-        title.innerText = "Create Account";
-        btn.innerText = "Register";
-        toggleText.innerHTML = "Already have an account? <span>Sign In</span>";
-    } else {
-        title.innerText = "Welcome to MediGuard";
-        btn.innerText = "Sign In";
-        toggleText.innerHTML = "New user? <span>Sign Up</span>";
-    }
-}
-
+// 1. Authentication
 authForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    authContainer.classList.remove('active');
-    dashboardContainer.classList.add('active');
-    addLog("Administrator Logged In");
+    const email = document.getElementById('login-email').value;
+    currentUser = email;
+    
+    document.getElementById('display-email').innerText = email;
+    document.getElementById('display-email-nav').innerText = email.split('@')[0];
+    
+    document.getElementById('auth-container').classList.remove('active');
+    document.getElementById('dashboard-container').classList.add('active');
+    addLog(`Security clearance granted for: ${email}`);
 });
 
-// 2. Logout
-document.getElementById('logout-btn').addEventListener('click', () => {
-    dashboardContainer.classList.remove('active');
-    authContainer.classList.add('active');
-    addLog("Administrator Logged Out");
+// 2. Profile & Theme
+document.getElementById('profile-btn').addEventListener('click', () => {
+    document.getElementById('profile-modal').style.display = 'flex';
 });
 
-// 3. Theme Toggle
+function closeProfile() {
+    document.getElementById('profile-modal').style.display = 'none';
+}
+
 document.getElementById('theme-toggle').addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
-    addLog("UI Theme Updated");
+    addLog("UI Theme preference toggled.");
 });
 
-// 4. Record Handling
+// 3. Record Handling
 clientForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    // Get values
     const name = document.getElementById('client-name').value;
-    const location = document.getElementById('customer-location').value;
-    const medicine = document.getElementById('medicine-type').value;
+    const loc = document.getElementById('customer-location').value;
+    const med = document.getElementById('medicine-type').value;
     const qty = document.getElementById('quantity').value;
 
-    // Create Map URL (Safe encoding for Google Maps)
-    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+    const record = {
+        id: Date.now(),
+        name,
+        location: loc,
+        medicine: med,
+        quantity: qty,
+        time: new Date().toLocaleString(),
+        // Generate Google Maps URL
+        mapUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`
+    };
 
-    // Update UI List
-    if(recordCount === 0) clientList.innerHTML = '';
-    
-    const record = document.createElement('div');
-    record.className = 'client-entry';
-    record.innerHTML = `
-        <div style="display: flex; justify-content: space-between;">
-            <strong>${name}</strong>
-            <span style="color: var(--accent)">Qty: ${qty}</span>
-        </div>
-        <div style="font-size: 0.9rem; margin-top: 5px;">Medicine: ${medicine}</div>
-        <div style="font-size: 0.85rem; color: var(--text-light);">Loc: ${location}</div>
-        <a href="${mapUrl}" target="_blank" class="map-link">📍 View on Google Maps</a>
-    `;
-    
-    clientList.prepend(record);
-    
-    // Update Stats & Logs
-    recordCount++;
-    document.getElementById('record-count').innerText = `${recordCount} Total`;
-    addLog(`Entry Added: ${name} purchased ${qty} units of ${medicine}`);
-    
-    clientForm.reset();
+    records.push(record);
+    renderRecords(records);
+    addLog(`Ledger Update: ${qty}x ${med} dispatched to ${name}`);
+    e.target.reset();
 });
 
-// 5. Logging Helper
+// 4. Live Search
+searchBar.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = records.filter(r => 
+        r.name.toLowerCase().includes(term) || 
+        r.medicine.toLowerCase().includes(term)
+    );
+    renderRecords(filtered);
+});
+
+// 5. Render Function
+function renderRecords(data) {
+    if (data.length === 0) {
+        clientList.innerHTML = `<div class="empty-state"><p>No matching records found.</p></div>`;
+    } else {
+        clientList.innerHTML = data.map(r => `
+            <div class="client-entry">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <h4 style="margin:0">${r.name}</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-light); margin: 4px 0;">${r.medicine}</p>
+                    </div>
+                    <span class="badge">Qty: ${r.quantity}</span>
+                </div>
+                <hr style="margin: 12px 0; border: 0; border-top: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.75rem; color: var(--text-light);">📍 ${r.location}</span>
+                    <a href="${r.mapUrl}" target="_blank" class="map-btn">View Map ↗</a>
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-light); margin-top: 8px; opacity: 0.6;">
+                    Logged: ${r.time}
+                </div>
+            </div>
+        `).join('');
+    }
+    document.getElementById('record-count').innerText = `${records.length} Total`;
+}
+
+// 6. PDF Generation
+document.getElementById('generate-pdf').addEventListener('click', () => {
+    if (records.length === 0) return alert("System requires data to compile report.");
+    
+    const element = document.getElementById('report-area');
+    const opt = {
+        margin: 10,
+        filename: `MediGuard_Dispatch_${Date.now()}.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    addLog("Compiling PDF Dispatch Report...");
+    html2pdf().set(opt).from(element).save();
+});
+
+// 7. System Logger
 function addLog(msg) {
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const time = new Date().toLocaleTimeString();
     const li = document.createElement('li');
-    li.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+    li.style.marginBottom = "5px";
+    li.innerHTML = `<span style="color: #64748b;">[${time}]</span> > ${msg}`;
     logList.prepend(li);
 }
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+    if(confirm("Terminate current session?")) location.reload();
+});
