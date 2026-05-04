@@ -3,81 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediGuard | Medical Distribution Portal</title>
+    <title>MediGuard Pro | Enterprise Medical Portal</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="light-theme">
 
     <!-- Auth Section -->
     <div id="auth-container" class="active">
+        <div class="auth-blur"></div>
         <div class="auth-card">
             <div class="brand">
                 <div class="logo-icon">✚</div>
-                <h2>MediGuard</h2>
+                <h2 id="auth-title">MediGuard <span>Pro</span></h2>
             </div>
-            <p id="auth-subtitle">Log in to manage medical records</p>
+            <p id="auth-subtitle">Secure Access Portal</p>
             <form id="auth-form">
                 <div class="input-group">
-                    <input type="email" placeholder="Email Address" required>
+                    <input type="email" id="login-email" placeholder="Email Address" required>
                 </div>
                 <div class="input-group">
                     <input type="password" placeholder="Password" required>
                 </div>
-                <button type="submit" id="auth-btn">Sign In</button>
+                <button type="submit" id="auth-btn" class="btn-primary">Authenticate</button>
             </form>
-            <p onclick="toggleAuthMode()" id="toggle-auth">New user? <span>Sign Up</span></p>
+            <p onclick="toggleAuthMode()" id="toggle-auth">New officer? <span>Request Access</span></p>
         </div>
     </div>
 
     <!-- Dashboard Section -->
     <div id="dashboard-container">
-        <header>
-            <div class="logo">MediGuard <span>System</span></div>
-            <div class="nav-controls">
-                <button id="theme-toggle" class="btn-secondary">🌓 Toggle Theme</button>
-                <button id="logout-btn" class="btn-danger">Log Out</button>
+        <nav class="glass-nav">
+            <div class="logo">MediGuard <span>Pro</span></div>
+            <div class="search-wrapper">
+                <input type="text" id="search-bar" placeholder="Search records by name or medicine...">
             </div>
-        </header>
+            <div class="nav-controls">
+                <button id="theme-toggle" class="icon-btn">🌓</button>
+                <button id="profile-btn" class="profile-pill">
+                    <span id="display-email-nav">Admin</span>
+                    <div class="avatar"></div>
+                </button>
+                <button id="logout-btn" class="btn-danger-outline">Exit</button>
+            </div>
+        </nav>
 
-        <main class="dashboard-grid">
-            <!-- Left: Entry Form -->
-            <section class="card form-section">
-                <h3>Record Entry</h3>
-                <form id="client-form">
-                    <label>Customer Details</label>
-                    <input type="text" id="client-name" placeholder="Customer Name" required>
-                    <input type="text" id="customer-location" placeholder="City or Full Address" required>
-                    
-                    <label>Order Details</label>
-                    <input type="text" id="medicine-type" placeholder="Medicine Name (e.g. Paracetamol)" required>
-                    <input type="number" id="quantity" placeholder="Quantity" min="1" required>
-                    
-                    <button type="submit" class="btn-primary">Save to Database</button>
-                </form>
-            </section>
-
-            <!-- Right: Saved Information -->
-            <section class="card display-section">
-                <div class="section-header">
-                    <h3>Active Records</h3>
-                    <span id="record-count" class="badge">0 Total</span>
+        <!-- User Profile Modal -->
+        <div id="profile-modal" class="modal">
+            <div class="modal-content card">
+                <div class="modal-header">
+                    <h3>Officer Profile</h3>
+                    <span class="close-modal" onclick="closeProfile()">&times;</span>
                 </div>
-                <div id="client-list">
-                    <div class="empty-state">
-                        <p>No records found in the current session.</p>
+                <div class="profile-body">
+                    <div class="profile-avatar-large"></div>
+                    <p><strong>Identity:</strong> <span id="display-email">admin@mediguard.com</span></p>
+                    <p><strong>Auth Role:</strong> Lead Distributor</p>
+                    <p><strong>Security Status:</strong> <span class="badge badge-green">Verified</span></p>
+                </div>
+            </div>
+        </div>
+
+        <main class="dashboard-content">
+            <div class="grid-left">
+                <!-- Entry Form -->
+                <section class="card glass-card">
+                    <h3 class="section-title">New Record Entry</h3>
+                    <form id="client-form">
+                        <div class="field-group">
+                            <label>Customer Identity</label>
+                            <input type="text" id="client-name" placeholder="Full Name" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Dispatch Location</label>
+                            <input type="text" id="customer-location" placeholder="City or Street Address" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Pharmaceutical Specs</label>
+                            <div class="input-split">
+                                <input type="text" id="medicine-type" placeholder="Medicine Name" required>
+                                <input type="number" id="quantity" placeholder="Qty" min="1" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary full-width">Commit to Ledger</button>
+                    </form>
+                </section>
+
+                <section class="card glass-card report-card">
+                    <h3>Reporting Tools</h3>
+                    <p>Export current filtered view to official PDF format.</p>
+                    <button id="generate-pdf" class="btn-accent full-width">Export System Report</button>
+                </section>
+            </div>
+
+            <div class="grid-right">
+                <!-- Display -->
+                <section class="card display-section">
+                    <div class="section-header">
+                        <h3>Distribution Ledger</h3>
+                        <span id="record-count" class="badge">0 Records</span>
                     </div>
-                </div>
-            </section>
+                    <div id="report-area">
+                        <div id="client-list">
+                            <div class="empty-state">
+                                <p>No transactions found in current session.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-            <!-- Bottom: Activity Logs -->
-            <section class="card logs-section">
-                <h3>System Activity Log</h3>
-                <div class="log-wrapper">
-                    <ul id="log-list">
-                        <li><span class="log-time">Now</span> System operational...</li>
-                    </ul>
-                </div>
-            </section>
+                <!-- Activity Logs -->
+                <section class="card logs-section">
+                    <h3 class="section-title">Terminal Logs</h3>
+                    <div class="log-wrapper">
+                        <ul id="log-list"></ul>
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
 
