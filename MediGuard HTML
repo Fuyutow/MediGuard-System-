@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediGuard | Medical Distribution Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme">
+
+    <!-- Auth Section -->
+    <div id="auth-container" class="active">
+        <div class="auth-card">
+            <div class="brand">
+                <div class="logo-icon">✚</div>
+                <h2>MediGuard</h2>
+            </div>
+            <p id="auth-subtitle">Log in to manage medical records</p>
+            <form id="auth-form">
+                <div class="input-group">
+                    <input type="email" placeholder="Email Address" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <button type="submit" id="auth-btn">Sign In</button>
+            </form>
+            <p onclick="toggleAuthMode()" id="toggle-auth">New user? <span>Sign Up</span></p>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboard-container">
+        <header>
+            <div class="logo">MediGuard <span>System</span></div>
+            <div class="nav-controls">
+                <button id="theme-toggle" class="btn-secondary">🌓 Toggle Theme</button>
+                <button id="logout-btn" class="btn-danger">Log Out</button>
+            </div>
+        </header>
+
+        <main class="dashboard-grid">
+            <!-- Left: Entry Form -->
+            <section class="card form-section">
+                <h3>Record Entry</h3>
+                <form id="client-form">
+                    <label>Customer Details</label>
+                    <input type="text" id="client-name" placeholder="Customer Name" required>
+                    <input type="text" id="customer-location" placeholder="City or Full Address" required>
+                    
+                    <label>Order Details</label>
+                    <input type="text" id="medicine-type" placeholder="Medicine Name (e.g. Paracetamol)" required>
+                    <input type="number" id="quantity" placeholder="Quantity" min="1" required>
+                    
+                    <button type="submit" class="btn-primary">Save to Database</button>
+                </form>
+            </section>
+
+            <!-- Right: Saved Information -->
+            <section class="card display-section">
+                <div class="section-header">
+                    <h3>Active Records</h3>
+                    <span id="record-count" class="badge">0 Total</span>
+                </div>
+                <div id="client-list">
+                    <div class="empty-state">
+                        <p>No records found in the current session.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom: Activity Logs -->
+            <section class="card logs-section">
+                <h3>System Activity Log</h3>
+                <div class="log-wrapper">
+                    <ul id="log-list">
+                        <li><span class="log-time">Now</span> System operational...</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
