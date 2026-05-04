@@ -1,0 +1,93 @@
+// State Management
+let recordCount = 0;
+
+// UI Elements
+const authContainer = document.getElementById('auth-container');
+const dashboardContainer = document.getElementById('dashboard-container');
+const authForm = document.getElementById('auth-form');
+const clientForm = document.getElementById('client-form');
+const clientList = document.getElementById('client-list');
+const logList = document.getElementById('log-list');
+
+// 1. Auth Logic
+function toggleAuthMode() {
+    const title = document.getElementById('auth-title');
+    const btn = document.getElementById('auth-btn');
+    const toggleText = document.getElementById('toggle-auth');
+    
+    if (btn.innerText === "Sign In") {
+        title.innerText = "Create Account";
+        btn.innerText = "Register";
+        toggleText.innerHTML = "Already have an account? <span>Sign In</span>";
+    } else {
+        title.innerText = "Welcome to MediGuard";
+        btn.innerText = "Sign In";
+        toggleText.innerHTML = "New user? <span>Sign Up</span>";
+    }
+}
+
+authForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    authContainer.classList.remove('active');
+    dashboardContainer.classList.add('active');
+    addLog("Administrator Logged In");
+});
+
+// 2. Logout
+document.getElementById('logout-btn').addEventListener('click', () => {
+    dashboardContainer.classList.remove('active');
+    authContainer.classList.add('active');
+    addLog("Administrator Logged Out");
+});
+
+// 3. Theme Toggle
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark-theme');
+    addLog("UI Theme Updated");
+});
+
+// 4. Record Handling
+clientForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    // Get values
+    const name = document.getElementById('client-name').value;
+    const location = document.getElementById('customer-location').value;
+    const medicine = document.getElementById('medicine-type').value;
+    const qty = document.getElementById('quantity').value;
+
+    // Create Map URL (Safe encoding for Google Maps)
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+
+    // Update UI List
+    if(recordCount === 0) clientList.innerHTML = '';
+    
+    const record = document.createElement('div');
+    record.className = 'client-entry';
+    record.innerHTML = `
+        <div style="display: flex; justify-content: space-between;">
+            <strong>${name}</strong>
+            <span style="color: var(--accent)">Qty: ${qty}</span>
+        </div>
+        <div style="font-size: 0.9rem; margin-top: 5px;">Medicine: ${medicine}</div>
+        <div style="font-size: 0.85rem; color: var(--text-light);">Loc: ${location}</div>
+        <a href="${mapUrl}" target="_blank" class="map-link">📍 View on Google Maps</a>
+    `;
+    
+    clientList.prepend(record);
+    
+    // Update Stats & Logs
+    recordCount++;
+    document.getElementById('record-count').innerText = `${recordCount} Total`;
+    addLog(`Entry Added: ${name} purchased ${qty} units of ${medicine}`);
+    
+    clientForm.reset();
+});
+
+// 5. Logging Helper
+function addLog(msg) {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+    logList.prepend(li);
+}
